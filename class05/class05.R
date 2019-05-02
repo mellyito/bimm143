@@ -2,6 +2,7 @@
 #' title: "Class 5: R Graphics"
 #' author: "Melissa Ito"
 #' date: "April 18, 2019"
+#' output: github_document
 #' ---
 #Class 5 R graphics
 
