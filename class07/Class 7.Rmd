@@ -1,0 +1,209 @@
+---
+title: "Class 7: R functions and packages"
+author: "Melissa Ito"
+date: "4/23/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Functions revisited
+
+We will source a file from online with our functions from last day
+
+```{r}
+source("http://tinyurl.com/rescale-R")
+```
+
+Try out the last day's rescale() function
+
+```{r}
+rescale( 1:10 )
+```
+
+Try the rescale2 function that catches string inputs
+
+```{r}
+# rescale2(c(1:10, "string"))
+```
+
+# Find missing NA values in two vectors
+
+Start with a simple example of the larger problem I am trying to solve
+
+```{r}
+x <- c( 1, 2, NA, 3, NA) 
+y <- c( NA, 3, NA, 3, 4)
+```
+
+```{r}
+is.na(x)
+```
+
+```{r}
+is.na(y)
+```
+
+Try putting these together with an AND
+
+```{r}
+is.na (x) & is.na(y)
+```
+
+Take the sum() to find out how many TRUE values we have and thus how many NAs we had in both x and y
+
+```{r}
+sum(is.na (x) & is.na(y))
+```
+
+Now I can make this into our first function...
+
+```{r}
+both_na <-  function(x, y) {
+  sum(is.na (x) & is.na(y))
+}
+```
+
+```{r}
+both_na(x, c(NA, 3, NA, 2, NA))
+```
+
+Test, test, test
+
+```{r}
+ x <-  c(NA, NA, NA)
+y1 <- c( 1, NA, NA)
+y2 <- c( 1, NA, NA, NA)
+```
+
+```{r}
+both_na(x, y2)
+```
+
+```{r}
+y3 <- c(1, NA, NA, NA, NA, NA, NA)
+both_na(x, y3)
+```
+
+```{r}
+3 == 3
+3 == 2
+3 != 2
+```
+
+```{r}
+length(x)
+length (y2)
+```
+
+Now lets try the both_na2() function on our different length input vectors
+
+```{r}
+both_na2 (x, y2)
+```
+
+```{r}
+which( c(F, F, T, F, T))
+
+which( is.na( c(1, 2, NA, 4)))
+```
+
+```{r}
+x <- c( 1, 2, NA, 3, NA) 
+y <- c( NA, 3, NA, 3, 4)
+
+both_na3 (x, y)
+```
+
+## Intersect function
+
+```{r}
+df1
+```
+
+```{r}
+df2
+```
+
+Make thing simple
+
+```{r}
+x <- df1$IDs
+y <- df2$IDs
+
+x
+y
+```
+
+```{r}
+intersect (x, y)
+```
+
+```{r}
+x %in% y
+which ( x %in% y )
+```
+
+```{r}
+x [x %in% y]
+```
+
+```{r}
+cbind ( x [ x %in% y],
+        y [ y %in% x] )
+```
+
+Use the RStudio shortcut 'CODE > EXTRACT FUNCTION' to turn our snippet into a working function
+
+```{r}
+gene_intersect <- function(x, y) {
+  cbind ( x [ x %in% y],
+          y [ y %in% x] )
+}
+```
+
+```{r}
+gene_intersect(df1$IDs, df2$IDs)
+```
+
+```{r}
+gene_intersect2(df1, df2)
+```
+
+```{r}
+gene_intersect3(df1, df2)
+```
+
+```{r}
+merge(df1, df2, by = "IDs")
+```
+
+## Practice writing our own function
+
+Want to make a function called grade() tat will calculate the mean score and drop the lowest single score
+
+```{r}
+student1  <-  c(100, 100, 100, 100, 100, 100, 100, 90)
+student2  <-  c(100, 90, 90, 90, 90, 90, 97, 80)
+
+
+ 
+grade <- function(x) {
+  (sum(x) - min(x))/ (length(x)-1)
+}
+```
+
+```{r}
+grade(student1)
+grade(student2)
+```
+
+
+
+
+
+
+
+
