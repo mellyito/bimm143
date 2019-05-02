@@ -2,7 +2,7 @@
 title: 'Class 8: Machine Learning'
 author: "Melissa Ito"
 date: "4/25/2019"
-output: html_document
+output: github_document
 ---
 
 ```{r setup, include=FALSE}
@@ -19,6 +19,9 @@ tmp <- c(rnorm(30,-3), rnorm(30,3))
 x <- cbind(x=tmp, y=rev(tmp))
 
 plot(x)
+
+# Trying to fix an error
+cl <- kmeans (x, 2, nstart = 20)
 ```
 
  Use the kmeans() function setting k to 2 and nstart=20
@@ -237,8 +240,8 @@ summary (pca)
 
 Generate plot of PC1 vs PC2
 ```{r}
-plot(pca$x[,1], pca$x[,2], xlab="PC1", ylab="PC2", xlim=c(-270,500))
-text(pca$x[,1], pca$x[,2], colnames(x), col = mycols)
+# plot(pca$x[,1], pca$x[,2], xlab="PC1", ylab="PC2", xlim=c(-270,500))
+# text(pca$x[,1], pca$x[,2], colnames(x), col = mycols)
 ```
 
 ```{r}
