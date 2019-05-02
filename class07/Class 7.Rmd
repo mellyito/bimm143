@@ -2,7 +2,7 @@
 title: "Class 7: R functions and packages"
 author: "Melissa Ito"
 date: "4/23/2019"
-output: html_document
+output: github_document
 ---
 
 ```{r setup, include=FALSE}
@@ -101,7 +101,7 @@ length (y2)
 Now lets try the both_na2() function on our different length input vectors
 
 ```{r}
-both_na2 (x, y2)
+#both_na2 (x, y2)
 ```
 
 ```{r}
