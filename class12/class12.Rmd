@@ -2,7 +2,7 @@
 title: "Class 12: Bioinformatics in drug discovery and design"
 author: "Melissa Ito"
 date: "5/9/2019"
-output: html_document
+output: github_document
 ---
 
 ```{r setup, include=FALSE}
