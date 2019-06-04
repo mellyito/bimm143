@@ -14,7 +14,7 @@ knitr::opts_chunk$set(echo = TRUE)
 We will first prepare our HIV-Pr system for drug docking by making a protein only PDB format file (i.e. we will remove water, existing ligand etc.)
 
 ```{r}
-install.packages("bio3d")
+# install.packages("bio3d")
 ```
 
 ```{r}
