@@ -1,0 +1,276 @@
+---
+title: "Class 9: Unsupervised Learning Mini-Project"
+author: "Melissa Ito"
+date: "6/4/2019"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## 1. Exploratory Data Analysis
+
+*Preparing the Data*
+
+```{r}
+wisc.df <- read.csv("https://bioboot.github.io/bimm143_S19/class-material/WisconsinCancer.csv")
+wisc.df
+```
+
+```{r}
+#convert the features of the data
+wisc.data <-  as.matrix(wisc.df [, 3:32])
+```
+
+```{r}
+#set the row names of wisc.data
+row.names(wisc.data) <- wisc.df$id
+```
+
+```{r}
+# store the diagnosis data as a vector of 1 and 0 with 1 being cancer
+diagnosis <- as.numeric(wisc.df$diagnosis == "M")
+```
+
+Q1: How many observations are in this data set?
+A1: 33
+```{r}
+ncol(wisc.data)
+```
+
+Q2: How many variables/features in the data are suffixed with **_mean**?
+A2: 10
+```{r}
+length( grep("_mean", colnames(wisc.data)))
+```
+
+Q3: How many of the observations have a malignant dose?
+A3: 212
+```{r}
+table(diagnosis)
+```
+
+## 2. Principal Component Analysis
+
+*Performing PCA*
+
+```{r}
+# check column means and standard deviations
+round( colMeans(wisc.data), 1)
+round( apply(wisc.data, 2, sd), 1)
+```
+
+```{r}
+# perform PCA on wisc.data 
+wisc.pr <- prcomp(wisc.data, scale = TRUE)
+summary(wisc.pr)
+```
+
+```{r}
+plot(wisc.pr$x[,1], wisc.pr$x[,2], col = diagnosis+1)
+```
+
+
+Q4: From your results, what proportion of the original variance is captured by PC1?
+A4: 44.27%
+
+Q5: How many PC's are required to describe at least 70% of the original variance in data?
+A5: 3 (look at "cumulative proportion" of summary)
+
+Q6: How many PC's are required to describe at least 90% of the original variance in data?
+A6: 7
+
+*Interpreting PCA Results*
+
+Q7: What stands out to you about this plot, is it easy to understand? Why or why not?
+A7: hard to understand, can't differentiate the data
+```{r}
+biplot(wisc.pr)
+```
+
+```{r}
+# Scatter plot observations by components 1 and 2
+plot( wisc.pr$x[,1], wisc.pr$x[,2] , col = (diagnosis +1) , 
+     xlab = "PC1", ylab = "PC2")
+```
+
+```{r}
+# Repeat for components 1 and 3
+plot(wisc.pr$x[,1], wisc.pr$x[,3], col = (diagnosis + 1), 
+     xlab = "PC1", ylab = "PC3")
+```
+
+Q8: What do you notice about these plots?
+A8: Because PC2 explains more variance than PC3, there is a cleaner cut separating the two subgroups in the first graph compared to the second. Both show that PC1 is capturing a separation of benign and malignant tumors.
+
+*Variance Explained*
+
+```{r}
+# Calculate variance of each component
+pr.var <- (wisc.pr$sdev^2)
+head(pr.var)
+```
+
+```{r}
+# Variance explained by each principal component: pve
+pve <- pr.var / (sum(pr.var))*100
+head(pve)
+```
+
+```{r}
+# Plot variance explained for each principal component
+plot(pve, xlab = "Principal Component", 
+     ylab = "Proportion of Variance Explained", 
+     ylim = c(0, 100), type = "o")
+```
+
+```{r}
+# Alternative scree plot of the same data, note data driven y-axis
+barplot(pve, ylab = "Precent of Variance Explained",
+     names.arg=paste0("PC",1:length(pve)), las=2, axes = FALSE)
+axis(2, at=pve, labels=round(pve,2)*100 )
+```
+
+```{r}
+# Plot cumulative proportion of variance explained
+plot(cumsum(pve), xlab = "Principal Component", 
+     ylab = "Cumulative Proportion of Variance Explained", 
+     ylim = c(0, 100), type = "o")
+```
+
+
+```{r}
+## ggplot based graph
+# install.packages("factoextra")
+# library(factoextra)
+```
+
+```{r}
+par(mfcol = c(1,2))
+plot(pve, xlab = "Principal Component", 
+     ylab = "Proportion of Variance Explained", 
+     ylim = c(0, 100), type = "o")
+plot(cumsum(pve), xlab = "Principal Component", 
+     ylab = "Cumulative Proportion of Variance Explained", 
+     ylim = c(0, 100), type = "o")
+```
+
+
+```{r}
+# fviz_eig(wisc.pr, addlabels = TRUE)
+```
+
+*Communicating PCA Results*
+
+Q9: For the first principal component, what is the component of the loading vector (i.e. **wisc.pr$rotation[,1]** for the feature **concave.points_mean**)
+A9: 
+
+Q10: What is the minimum number of PCs required to explain 80% of the variance of the data?
+A10: 5 (looking at cumulative proportion of variance plot)
+
+
+## 3. Hierarchical Clustering
+
+*Hierarchical clustering of case data*
+
+```{r}
+# Scale the wisc.data data: data.scaled
+data.scaled <- scale(wisc.data)
+```
+
+```{r}
+data.dist <- dist(data.scaled)
+```
+
+```{r}
+wisc.hclust <- hclust(data.dist, method = "complete")
+```
+
+*Results of Hierarchical Clustering*
+
+Q11: What is the height at which the clustering model has 4 clusters?
+A11: h = 19
+```{r}
+plot(wisc.hclust)
+abline(h = 19, col = "red", lty = 2)
+```
+
+*Selecting number of clusters*
+
+```{r}
+wisc.hclust.clusters <- cutree(wisc.hclust, k = 4)
+```
+
+```{r}
+# compare cluster membership to actual diagnoses
+table(wisc.hclust.clusters, diagnosis)
+```
+
+## 5. Combining methods
+
+*Clustering on PCA results*
+
+```{r}
+# work with wisk.pr columns 1-7 because they are PC1-7 that account for 90% of variability
+dist.wisc.pr <- dist(wisc.pr$x[,1:7])
+wisc.pr.hclust <- hclust(dist.wisc.pr, method = "ward.D2")
+plot(wisc.pr.hclust)
+wisc.pr.hclust.clusters <- cutree(wisc.pr.hclust, k=2)
+```
+
+```{r}
+grps <- cutree(wisc.pr.hclust, k=2)
+table(grps)
+```
+
+```{r}
+table(grps, diagnosis)
+```
+
+```{r}
+plot(wisc.pr$x[,1:2], col=grps)
+```
+
+```{r}
+plot(wisc.pr$x[,1:2], col=diagnosis+1)
+```
+
+Q14: How well does the newly created model with four clusters separate out the two diagnoses?
+A14: 
+```{r}
+# Compare to actual diagnoses
+table(wisc.pr.hclust.clusters, diagnosis)
+```
+
+## 7. Prediction
+
+```{r}
+#url <- "new_samples.csv"
+url <- "https://tinyurl.com/new-samples-CSV"
+new <- read.csv(url)
+npc <- predict(wisc.pr, newdata=new)
+npc
+```
+
+```{r}
+plot(wisc.pr$x[,1:2], col=grps)
+points(npc[,1], npc[,2], col="blue", pch=16)
+```
+
+Q17: Which of these new patients should we prioritize for follow up based on your results?
+A17: the one in the red 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
