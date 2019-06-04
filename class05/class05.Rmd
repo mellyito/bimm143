@@ -2,7 +2,9 @@
 title: "Class 5"
 author: "Melissa Ito"
 date: "6/4/2019"
-output: html_document
+output:
+  html_document: default
+  pdf_document: default
 ---
 
 ```{r setup, include=FALSE}
