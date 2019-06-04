@@ -1,0 +1,159 @@
+---
+title: "Class 11: Structural Bioinformatics"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## The PDB database
+
+The [PDB](http://www.rcsb.org/) database is the main repository for biomolecular structure data.
+
+Here we examine the contents of the PDB:
+
+>Q1: Download a CSV file from the PDB site (accessible from “Analyze” -> “PDB Statistics” > “by Experimental Method and Molecular Type”. Move this CSV file into your RStudio project and determine the percentage of structures solved by X-Ray and Electron Microscopy. From the website what proportion of structures are protein?
+
+```{r}
+db <- read.csv("Data Export Summary.csv", row.names = 1)
+head(db)
+```
+
+How many are X-Ray
+
+```{r}
+((db$Total[1])/sum(db$Total)) * 100
+```
+
+How many are Electron Microscopy
+
+```{r}
+((db$Total[3])/sum(db$Total)) * 100
+```
+
+What proportion of structures are Protein...
+
+```{r}
+(sum(db$Proteins)/sum(db$Total)) * 100
+```
+
+
+We could also try the datapasta package and copy paste from website and 
+"Addins" > "Paste as data.frame"...
+
+```{r}
+library(datapasta)
+
+data.frame(stringsAsFactors=FALSE,
+   Experimental.Method = c("X-Ray", "NMR", "Electron Microscopy", "Other",
+                           "Multi Method", "Total"),
+              Proteins = c(126880, 11062, 2277, 256, 129, 140604),
+         Nucleic.Acids = c(2012, 1279, 31, 4, 5, 3331),
+    ProteinComplex = c(6547, 259, 800, 6, 2, 7614),
+                 Other = c(8, 8, 0, 13, 1, 30),
+                 Total = c(135447, 12608, 3108, 279, 137, 151579)
+)
+
+
+```
+
+>Q2: Type HIV in the PDB website search box on the home page and determine how many HIV-1 protease structures are in the current PDB?
+
+There are 1157 as of "2019-05-07" See:
+[HIV protease results](http://www.rcsb.org/pdb/results/results.do?tabtoshow=Current&qrid=5A2D9DD6)
+
+## Introduction to Bio3D in R
+
+```{r}
+library(bio3d)
+pdb <- read.pdb("1hsg.pdb")
+pdb
+```
+
+> Q6. How many amino acid residues are there in this pdb object and what are the two non- protein residues?
+
+198 residues and the two non-protein residues are HOH (127) and MK1 (1)
+```{r}
+aa321(pdb$atom$resid)
+```
+
+Atom selection is done via the function **atom.select()**
+
+```{r}
+prot.pdb <-  atom.select(pdb, "protein", value = TRUE)
+write.pdb(prot.pdb, file = "1hsg_protein.pdb")
+```
+
+```{r}
+lig.pdb <- atom.select(pdb, "ligand", value = TRUE)
+write.pdb(lig.pdb, file = "1hsg_ligand.pdb")
+```
+
+```{r}
+# to find attributes of an object
+attributes(pdb)
+```
+
+
+## Section 5: Example Application on Adenylate Kinase (Adk)
+
+# search and retreive ADK structures
+
+```{r}
+aa <- get.seq("1ake_A")
+b <- blast.pdb(aa)
+hits <- plot(b)
+```
+Figure 11: Blast results. Visualize and filter blast results through function plot.blast(). Here we proceed with only the top scoring hits (black).
+
+```{r}
+head(hits$pdb.id)
+```
+
+```{r}
+# Fetch PDBs
+files <- get.pdb(hits$pdb.id, path="pdbs", split=TRUE, gzip=TRUE) # Align structures
+pdbs <- pdbaln(files)
+# Vector containing PDB codes
+ids <- basename.pdb(pdbs$id)
+# Draw schematic alignment
+plot(pdbs, labels=ids)
+```
+Figure 12: Schematic representation of alignment. Grey regions depict aligned residues, while white depict gap regions. The red bar at the top depict sequence conservation.
+
+# Sequence conservation analysis
+
+```{r}
+# Calculate sequence conservation
+cons <- conserv(pdbs, method="entropy22") # SSE annotations
+sse <- pdbs2sse(pdbs, ind=1, rm.gaps=FALSE)
+# Plot conservation per residue
+plotb3(cons, sse=sse, ylab="Sequence entropy")
+```
+Figure 13: Sequence conservation per residue. Here, Shannon's information entropy is used to measure the diversity per alignment column. SSEs are depicted with dark (helices) and light (sheets) grey boxes in marginal regions.
+
+# Annotate collected PDB structures
+
+```{r}
+anno <- pdb.annotate(ids) 
+print(unique(anno$source))
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

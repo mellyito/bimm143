@@ -1,0 +1,94 @@
+---
+title: "Class 12: Bioinformatics in drug discovery and design"
+author: "Melissa Ito"
+date: "5/9/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Setup for Docking
+
+We will first prepare our HIV-Pr system for drug docking by making a protein only PDB format file (i.e. we will remove water, existing ligand etc.)
+
+```{r}
+install.packages("bio3d")
+```
+
+```{r}
+library(bio3d)
+file.name <- get.pdb("1hsg")
+```
+
+```{r}
+hiv <- read.pdb(file.name)
+hiv
+```
+
+```{r}
+prot <- atom.select(hiv, "protein", value = TRUE)
+write.pdb(prot, file = "1hsg_protein.pdb")
+prot
+```
+
+```{r}
+lig <- atom.select(hiv, "ligand", value = TRUE)
+write.pdb(lig, file = "1hsg_ligand.pdb")
+lig
+```
+
+We will load these into ADT to add hydrogens and make PDBQT files for each.
+
+Now we run autodoc vina with the cmd.
+
+## Process our docking results
+
+```{r}
+res <-  read.pdb("all.pdbqt", multi = TRUE)
+write.pdb(res, "results.pdb")
+```
+
+
+Calculate root mean square distance (RMSD) between each of the docking results and the known crystal strucure
+```{r}
+res <- read.pdb("all.pdbqt", multi = TRUE)
+ori <- read.pdb("ligand.pdbqt")
+rmsd(ori, res)
+```
+
+## Normal Mode analysis for flexible prediction
+
+```{r}
+pdb <- read.pdb("1hel")
+modes <- nma( pdb )
+m7 <- mktrj(modes, mode=7, file="mode_7.pdb")
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

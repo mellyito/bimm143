@@ -1,0 +1,169 @@
+---
+title: "Class 18"
+author: "Melissa Ito"
+date: "5/30/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Exploring the Cancer Genome Atlas
+
+Install the packages we need:
+
+```{r eval=FALSE}
+BiocManager::install( c("GenomicDataCommons", "TCGAbiolinks", "maftools") )
+```
+
+Load the packages
+
+```{r}
+library(GenomicDataCommons)
+library(TCGAbiolinks)
+library(maftools)
+```
+
+Can we talk with the NCI-GDC?
+
+```{r}
+GenomicDataCommons::status()
+```
+
+# Querying the GDC from R
+
+```{r}
+cases_by_project <- cases() %>%
+  facet("project.project_id") %>%
+  aggregations()
+head(cases_by_project)
+```
+
+If you use the **View()** function on our new **cases_by_project object** you will find that the data we are after is accessible via **cases_by_project$project.project_id**.
+
+```{r}
+View(cases_by_project)
+```
+
+Write the R code to make a barplot of the cases per project. Lets plot this data with a log scale for the y axis (log="y"), rotated axis labels (las=2) and color the bar coresponding to the TCGA-PAAD project.
+
+```{r}
+x <- cases_by_project$project.project_id
+
+# Make a custom color vector for our plot
+colvec <- rep("lightblue", nrow(x))
+colvec[ which(x$key == "TCGA-PAAD") ] <- "red"
+
+# Plot with 'log' for y axis and rotate labels with 'las'
+#par(___)  
+barplot(x$doc_count, names.arg=x$key, log="y", col=colvec, las=2)
+```
+
+# Variant analysis with R
+
+```{r}
+maf.file <- GDCquery_Maf(tumor="PAAD", pipelines = "mutect")
+```
+
+
+```{r}
+vars = read.maf(maf = maf.file, verbose = FALSE)
+```
+
+
+```{r}
+plotmafSummary(vars)
+```
+
+## Part 2: Designing a personalized cancer vaccine
+
+# Section 1. Protein sequences from healthy and tumor tissue
+
+```{r}
+ # install.packages(bio3d)
+library(bio3d)
+```
+
+1. read provided sequences
+```{r}
+fasta <- read.fasta("lecture18_sequences.fa")
+fasta
+```
+
+2. align
+```{r}
+seqs <- seqaln(fasta)
+seqs
+```
+
+3. looking for sites of cancer specific mutation (i.e. differences between the two sequences)
+
+Next we calculate identity per equivalent (i.e. aligned) position and then use this information to find non identical sites that do not contain gaps (i.e. indels). 
+
+ide < 1 means the two sequences are not identical at that position
+
+```{r}
+## Calculate positional identity scores
+ide <- conserv(seqs$ali, method="identity")
+mutant.sites <- which(ide < 1) 
+
+## Exclude gap possitions from analysis
+gaps <- gap.inspect(seqs)
+mutant.sites <- mutant.sites[mutant.sites %in% gaps$f.inds]
+
+mutant.sites
+```
+
+```{r}
+## Make a "names" label for our output sequences (one per mutant)
+mutant.names <- paste0(seqs$ali["P53_wt",mutant.sites],
+                       mutant.sites,
+                       seqs$ali["P53_mutant",mutant.sites])
+
+mutant.names
+```
+
+Now lets extract all 9-mer mutant encompassing sequences for each mutant site. This is equivalent to finding the sequence region eight residues before and eight residues after our mutation sites and outputting this subsequence to a new FASTA file.
+
+```{r}
+## Sequence positions surounding each mutant site
+start.position <- mutant.sites - 8
+end.position <-  mutant.sites + 8
+
+# Blank matrix to store sub-sequences
+store.seqs <- matrix("-", nrow=length(mutant.sites), ncol=17)
+rownames(store.seqs) <- mutant.names
+
+## Extract each sub-sequence
+for(i in 1:length(mutant.sites)) {
+  store.seqs[i,] <- seqs$ali["P53_mutant",start.position[i]:end.position[i]]
+}
+
+store.seqs
+```
+
+Finally lets output all these sequences to a FASTA file for further analysis with the [IEDB HLA binding prediction website](http://tools.iedb.org/mhci/)
+
+```{r}
+## Output a FASTA file for further analysis
+write.fasta(seqs=store.seqs, ids=mutant.names, file="subsequences.fa")
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

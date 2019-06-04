@@ -1,0 +1,92 @@
+---
+title: "Class 13: Genome Informatics"
+author: "Melissa Ito"
+date: "5/14/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Sample genotypes in the MXL 1000 Genome project data
+
+
+Here we focus on the Mexican Ancentry in Los Angeles, California (MXL) population.
+
+What proportion of the Mexican Ancentry in Los Angeles sample population (MXL) are homozygous for the asthma associated SNP (G|G) rs8067378
+```{r}
+# Read CSV from ENSEMBL
+mxl <- read.csv("373531-SampleGenotypes-Homo_sapiens_Variation_Sample_rs8067378.csv")
+head(mxl)
+```
+
+How many of each genotype are there?
+```{r}
+table(mxl$Genotype..forward.strand.)
+```
+
+Proportion or percent of total for each genotype
+```{r}
+(table(mxl$Genotype..forward.strand.) / nrow(mxl)) * 100
+```
+
+## Quality Scores in FASTQ files
+
+The fourth line of the FASTQ sequence format file encodes the quality score that tells us how good the sequence at a given position is (i.e. how likely it is to be correct based on the instrument)
+
+
+```{r}
+library(seqinr)
+library(gtools)
+
+s2c("DDDDCDEDCDDDDBBDDDCC@")
+#phred <- asc( s2c("DDDDCDEDCDDDDBBDDDCC@") ) - 33
+#phred
+```
+
+## Population Scale Analysis
+
+Read RNA-Seq count data with genotype information results table
+
+```{r}
+expr <- read.table("rs8067378_ENSG00000172057.6.txt", row.names = 1)
+
+head(expr)
+```
+
+
+```{r}
+summary(expr)
+```
+
+
+```{r}
+inds <-  expr$geno == "G/G"
+summary(expr[inds,"exp"])
+```
+
+```{r}
+inds <-  expr$geno == "A/G"
+summary(expr[inds,"exp"])
+```
+
+```{r}
+inds <-  expr$geno == "A/A"
+summary(expr[inds,"exp"])
+```
+
+
+```{r}
+boxplot(exp ~ geno , data = expr)
+```
+
+
+
+
+
+
+
+
+
+
